@@ -1,7 +1,6 @@
 from playwright.sync_api import sync_playwright
 
 from .profile.candidate import CandidateProfile
-from .tool.tool import ApplicationTools
 
 def main() -> None:
     profile = CandidateProfile(
