@@ -108,6 +108,45 @@ input {
   color: #e58b98;
 }
 
+.conversation-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px 0;
+}
+
+.conversation-controls button {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid #393641;
+  border-radius: 9px;
+  background: #211f29;
+  color: #d7cdfd;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.conversation-controls button:hover:not(:disabled) {
+  border-color: #7862df;
+  background: #2b2638;
+}
+
+.conversation-controls button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.conversation-controls p {
+  min-width: 0;
+  margin: 0;
+  color: #92939d;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
 .conversation {
   display: flex;
   flex: 1;

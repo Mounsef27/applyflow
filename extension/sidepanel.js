@@ -5,15 +5,23 @@ const input = document.querySelector("#message-input");
 const sendButton = document.querySelector("#send-button");
 const conversation = document.querySelector(".conversation");
 const messages = document.querySelector("#messages");
+const newChatButton = document.querySelector("#new-chat-button");
+const conversationStatus = document.querySelector("#conversation-status");
 const allowSiteButton = document.querySelector("#allow-site-button");
 const websiteAccessStatus = document.querySelector("#website-access-status");
 const inspectPageButton = document.querySelector("#inspect-page-button");
 const inspectionStatus = document.querySelector("#inspection-status");
 const MAX_PAGE_CONTENT_LENGTH = 12000;
+const THREAD_ID_STORAGE_KEY = "applyflow_thread_id";
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 let lastInspectedPage = null;
 let lastDeniedPermissionPattern = null;
 let pageAccessRefreshId = 0;
+let threadId = null;
+let threadIdPromise = null;
+let isChatStreaming = false;
 
 function scrollToLatest() {
   conversation.scrollTop = conversation.scrollHeight;
@@ -25,6 +33,60 @@ function isHttpPage(url) {
 
 function errorDetails(error) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function isValidThreadId(value) {
+  return typeof value === "string" && UUID_V4_PATTERN.test(value);
+}
+
+function createThreadId() {
+  if (typeof crypto.randomUUID !== "function") {
+    throw new Error("This browser does not support secure conversation IDs.");
+  }
+  const generatedId = crypto.randomUUID();
+  if (!isValidThreadId(generatedId)) {
+    throw new Error("The browser generated an invalid conversation ID.");
+  }
+  return generatedId;
+}
+
+async function loadOrCreateThreadId() {
+  const stored = await chrome.storage.local.get(THREAD_ID_STORAGE_KEY);
+  if (isValidThreadId(stored[THREAD_ID_STORAGE_KEY])) {
+    threadId = stored[THREAD_ID_STORAGE_KEY];
+    return threadId;
+  }
+
+  const generatedId = createThreadId();
+  await chrome.storage.local.set({ [THREAD_ID_STORAGE_KEY]: generatedId });
+  threadId = generatedId;
+  return threadId;
+}
+
+function getThreadId() {
+  if (isValidThreadId(threadId)) {
+    return Promise.resolve(threadId);
+  }
+  if (!threadIdPromise) {
+    threadIdPromise = loadOrCreateThreadId()
+      .then((id) => {
+        conversationStatus.textContent = "Conversation ready.";
+        newChatButton.disabled = isChatStreaming;
+        return id;
+      })
+      .catch((error) => {
+        threadIdPromise = null;
+        threadId = null;
+        newChatButton.disabled = isChatStreaming;
+        const storageError = new Error(
+          `Could not initialize conversation storage: ${errorDetails(error)}`,
+        );
+        storageError.code = "conversation-storage";
+        conversationStatus.textContent = storageError.message;
+        throw storageError;
+      });
+  }
+  return threadIdPromise;
 }
 
 function pageError(code, message) {
@@ -540,6 +602,31 @@ inspectPageButton.addEventListener("click", async () => {
   }
 });
 
+newChatButton.addEventListener("click", async () => {
+  if (isChatStreaming) {
+    return;
+  }
+
+  newChatButton.disabled = true;
+  try {
+    const newThreadId = createThreadId();
+    await chrome.storage.local.set({
+      [THREAD_ID_STORAGE_KEY]: newThreadId,
+    });
+    threadId = newThreadId;
+    threadIdPromise = Promise.resolve(newThreadId);
+    messages.replaceChildren();
+    conversationStatus.textContent = "New conversation started.";
+  } catch (error) {
+    conversationStatus.textContent =
+      `Could not start a new conversation: ${errorDetails(error)}`;
+  } finally {
+    newChatButton.disabled = isChatStreaming;
+  }
+});
+
+void getThreadId().catch(() => {});
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const message = input.value.trim();
@@ -547,6 +634,8 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  isChatStreaming = true;
+  newChatButton.disabled = true;
   addMessage("user", message);
   input.value = "";
   input.disabled = true;
@@ -555,12 +644,17 @@ form.addEventListener("submit", async (event) => {
   const assistantMessage = addMessage("assistant");
   assistantMessage.textContent = "Thinking...";
   assistantMessage.classList.add("loading");
+  let responseText = "";
 
   try {
+    const activeThreadId = await getThreadId();
     const response = await fetch(CHAT_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({
+        message,
+        thread_id: activeThreadId,
+      }),
     });
 
     if (!response.ok) {
@@ -572,7 +666,6 @@ form.addEventListener("submit", async (event) => {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let responseText = "";
 
     while (true) {
       const { done, value } = await reader.read();
@@ -598,12 +691,21 @@ form.addEventListener("submit", async (event) => {
   } catch (error) {
     assistantMessage.classList.remove("loading");
     assistantMessage.classList.add("message-error");
-    assistantMessage.textContent =
-      error instanceof TypeError
-        ? "Could not connect to ApplyFlow. Check that the backend is running at http://127.0.0.1:8000."
-        : error.message || "Something went wrong while contacting the backend.";
+    const errorMessage =
+      error?.code === "conversation-storage"
+        ? error.message
+        : error instanceof TypeError
+          ? responseText
+            ? "The response stream was interrupted."
+            : "Could not connect to ApplyFlow. Check that the backend is running at http://127.0.0.1:8000."
+          : error.message || "Something went wrong while contacting the backend.";
+    assistantMessage.textContent = responseText
+      ? `${responseText}\n\n[Response interrupted: ${errorMessage}]`
+      : errorMessage;
     scrollToLatest();
   } finally {
+    isChatStreaming = false;
+    newChatButton.disabled = false;
     input.disabled = false;
     sendButton.disabled = false;
     input.focus();

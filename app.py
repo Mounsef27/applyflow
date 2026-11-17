@@ -18,6 +18,9 @@ from pydantic import BaseModel
 from fastapi import WebSocket, WebSocketDisconnect
 import browser_bridge
 
+from contextlib import asynccontextmanager
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+
 from tool.inspect_page import inspect_page_tool
 from langgraph.prebuilt import ToolNode, tools_condition
 load_dotenv()
@@ -73,9 +76,26 @@ graph.add_conditional_edges(
 
 graph.add_edge("tools", "chat_node")
 
-workflow = graph.compile()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    database_url = os.environ["DATABASE_URL"]
 
-app = FastAPI()
+    async with AsyncPostgresSaver.from_conn_string(
+        database_url
+    ) as checkpointer:
+
+        await checkpointer.setup()
+
+        app.state.workflow = graph.compile(
+            checkpointer=checkpointer
+        )
+
+        print("PostgreSQL persistence initialized")
+
+        yield
+
+app = FastAPI(lifespan=lifespan)
+
 @app.websocket("/ws/browser")
 async def browser_websocket(websocket: WebSocket):
     await websocket.accept()
@@ -100,21 +120,24 @@ async def browser_websocket(websocket: WebSocket):
 
 class ChatRequest(BaseModel):
     message: str
+    thread_id: str
 
 
-async def generate_response(message: str):
-    async for chunk, metadata in workflow.astream(
+async def generate_response(message: str, thread_id: str):
+
+    config = {
+        "configurable": {
+            "thread_id": thread_id
+        }
+    }
+
+    async for chunk, metadata in app.state.workflow.astream(
         {
             "messages": [
-                SystemMessage(
-                    content=(
-                        "When inspect_page fails, explain the exact tool error "
-                        "instead of assuming that no webpage is open."
-                    )
-                ),
-                HumanMessage(content=message),
+                HumanMessage(content=message)
             ]
         },
+        config=config,
         stream_mode="messages",
     ):
         if metadata.get("langgraph_node") == "chat_node":
@@ -124,9 +147,14 @@ async def generate_response(message: str):
 
 
 @app.post("/chat")
-def chat(request: ChatRequest):
+async def chat(request: ChatRequest):
     return StreamingResponse(
-        generate_response(request.message),
+        generate_response(
+            request.message,
+            request.thread_id
+        ),
         media_type="text/plain; charset=utf-8",
-        headers={"X-Content-Type-Options": "nosniff"},
+        headers={
+            "X-Content-Type-Options": "nosniff"
+        },
     )
