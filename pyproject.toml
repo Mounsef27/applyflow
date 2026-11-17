@@ -1,0 +1,19 @@
+[project]
+name = "applyflow"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Mounsef27", email = "monsaf.debbache@g.enp.edu.dz" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "langgraph>=1.2.22",
+]
+
+[project.scripts]
+applyflow = "applyflow:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
