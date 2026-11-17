@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Annotated, TypedDict
 
-from langchain_core.messages import BaseMessage
+from langchain_core.messages import BaseMessage, SystemMessage
 from langgraph.graph.message import add_messages
 from langgraph.graph import END, START, StateGraph
 import getpass
@@ -15,7 +15,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from fastapi import WebSocket, WebSocketDisconnect
+import browser_bridge
 
+from tool.inspect_page import inspect_page_tool
+from langgraph.prebuilt import ToolNode, tools_condition
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -31,7 +35,9 @@ llm  = ChatGoogleGenerativeAI(
     google_api_key = GOOGLE_API_KEY
 
 )
+tools = [inspect_page_tool]
 
+llm_with_tools = llm.bind_tools(tools)
 
 class ChatState(TypedDict):
     """State for the LangGraph conversation graph.
@@ -44,40 +50,69 @@ class ChatState(TypedDict):
 
 
 
-def chat_node(state: ChatState) -> dict[str, list[BaseMessage]]:
-    response = llm.invoke(state["messages"])
+async def chat_node(state: ChatState):
+    response = await llm_with_tools.ainvoke(state["messages"])
+
+    print("Tool calls:", response.tool_calls)
+
     return {"messages": [response]}
 
 
 
 graph = StateGraph(ChatState)
+
 graph.add_node("chat_node", chat_node)
-graph.add_edge(START,"chat_node")
-graph.add_edge("chat_node",END)
+graph.add_node("tools", ToolNode(tools))
+
+graph.add_edge(START, "chat_node")
+
+graph.add_conditional_edges(
+    "chat_node",
+    tools_condition
+)
+
+graph.add_edge("tools", "chat_node")
 
 workflow = graph.compile()
 
-
-
-
-
-
-
-
-
-
 app = FastAPI()
+@app.websocket("/ws/browser")
+async def browser_websocket(websocket: WebSocket):
+    await websocket.accept()
+    browser_bridge.browser_socket = websocket
 
+    try:
+        while True:
+            data = await websocket.receive_json()
+
+            request_id = data.get("id")
+            future = browser_bridge.pending_requests.get(request_id)
+
+            if future is not None and not future.done():
+                future.set_result(data)
+
+    except WebSocketDisconnect:
+        print("Browser disconnected")
+
+    finally:
+        if browser_bridge.browser_socket is websocket:
+            browser_bridge.browser_socket = None
 
 class ChatRequest(BaseModel):
     message: str
 
 
-def generate_response(message: str):
-    for chunk, metadata in workflow.stream(
+async def generate_response(message: str):
+    async for chunk, metadata in workflow.astream(
         {
             "messages": [
-                HumanMessage(content=message)
+                SystemMessage(
+                    content=(
+                        "When inspect_page fails, explain the exact tool error "
+                        "instead of assuming that no webpage is open."
+                    )
+                ),
+                HumanMessage(content=message),
             ]
         },
         stream_mode="messages",

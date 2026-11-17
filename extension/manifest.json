@@ -3,8 +3,12 @@
   "name": "ApplyFlow",
   "version": "0.1.0",
   "description": "Chat with ApplyFlow from Chrome's Side Panel.",
-  "permissions": ["sidePanel"],
+  "permissions": ["sidePanel", "activeTab", "scripting", "tabs"],
   "host_permissions": ["http://127.0.0.1:8000/*"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' http://127.0.0.1:8000 ws://127.0.0.1:8000"
+  },
   "background": {
     "service_worker": "background.js"
   },

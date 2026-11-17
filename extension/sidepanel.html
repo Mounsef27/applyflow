@@ -15,6 +15,10 @@
           <h1>ApplyFlow</h1>
           <p>Your job search copilot</p>
         </div>
+        <div id="bridge-status" class="bridge-status" data-state="connecting" role="status" aria-live="polite">
+          <span class="bridge-status-dot" aria-hidden="true"></span>
+          <span id="bridge-status-text">Connecting</span>
+        </div>
       </header>
 
       <section class="conversation" aria-label="Conversation">
@@ -24,6 +28,16 @@
         </div>
         <div id="messages" class="messages" aria-live="polite"></div>
       </section>
+
+      <div class="site-access-controls">
+        <button id="allow-site-button" type="button">Allow This Site</button>
+        <p id="website-access-status" role="status" aria-live="polite">Checking website access...</p>
+      </div>
+
+      <div class="inspection-controls">
+        <button id="inspect-page-button" type="button">Inspect Page</button>
+        <p id="inspection-status" role="status" aria-live="polite"></p>
+      </div>
 
       <form id="chat-form" class="composer">
         <label class="sr-only" for="message-input">Your message</label>
