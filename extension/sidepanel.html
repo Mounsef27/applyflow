@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ApplyFlow</title>
+    <link rel="stylesheet" href="sidepanel.css">
+    <script src="sidepanel.js" defer></script>
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div class="brand-mark" aria-hidden="true">A</div>
+        <div>
+          <h1>ApplyFlow</h1>
+          <p>Your job search copilot</p>
+        </div>
+      </header>
+
+      <section class="conversation" aria-label="Conversation">
+        <div class="welcome">
+          <h2>Welcome to ApplyFlow</h2>
+          <p>Ask a question to get started.</p>
+        </div>
+        <div id="messages" class="messages" aria-live="polite"></div>
+      </section>
+
+      <form id="chat-form" class="composer">
+        <label class="sr-only" for="message-input">Your message</label>
+        <input
+          id="message-input"
+          name="message"
+          type="text"
+          placeholder="Message ApplyFlow..."
+          autocomplete="off"
+          required
+        >
+        <button id="send-button" type="submit" aria-label="Send message">
+          <span aria-hidden="true">↑</span>
+        </button>
+      </form>
+      <p class="footer-note">ApplyFlow can make mistakes. Verify important details.</p>
+    </main>
+  </body>
+</html>

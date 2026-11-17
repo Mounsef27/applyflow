@@ -8,7 +8,13 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi>=0.163.2",
+    "langchain-core>=1.8.1",
+    "langchain-google-genai>=4.5.0",
     "langgraph>=1.2.22",
+    "pydantic>=2.14.3",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [project.scripts]
