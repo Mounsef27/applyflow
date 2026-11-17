@@ -21,7 +21,7 @@ import browser_bridge
 from contextlib import asynccontextmanager
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-from tool.inspect_page import inspect_page_tool
+from applyflow.tool.inspect_page import inspect_page_tool
 from langgraph.prebuilt import ToolNode, tools_condition
 load_dotenv()
 
