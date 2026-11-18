@@ -1,0 +1,191 @@
+
+{
+  "first_name": "Mounsef",
+  "last_name": "DEBACHE",
+  "headline": "Data Scientist | ML Engineer | AI Engineer",
+  "email": "debachemounsef@gmail.com",
+  "phone": "+33 7 43 65 04 25",
+  "linkedin": null,
+  "github": null,
+  "education": [
+    {
+      "institution": "Télécom SudParis × Paris-Saclay",
+      "degree": "Master 2 en traitement de l’information et exploitation des données",
+      "location": "France",
+      "period": "2025 – 2026",
+      "distinction": "Lauréat de la Bourse d’Excellence IFA"
+    },
+    {
+      "institution": "École Polytechnique",
+      "degree": "Diplôme d’ingénieur et Master 2 en automatique",
+      "location": "Alger",
+      "period": "2020 – 2025",
+      "distinction": "Top 2% de la promotion"
+    }
+  ],
+  "experiences": [
+    {
+      "company": "AXA France",
+      "position": "Stage | ML Engineer",
+      "period": "avr. – sept. 2026",
+      "achievements": [
+        "Développement et évaluation de modèles LightGBM/XGBoost pour le scoring d’appétence client et la recommandation des deux produits les plus pertinents.",
+        "Amélioration du taux réel de souscription de 6,12% à 13,41% sur une période de backtest, soit une multiplication par 2,19 par rapport au modèle en production.",
+        "Passage du multiclasse au multilabel pour prédire les appétences simultanées et étendre la recommandation à de nouveaux produits.",
+        "Génération d’argumentaires par RAG pour les offres recommandées ; suivi MLflow et code modulaire, testé et documenté, avec intégration continue via GitHub Actions."
+      ],
+      "technologies": [
+        "Python",
+        "LightGBM",
+        "XGBoost",
+        "Databricks",
+        "MLflow",
+        "RAG",
+        "GitHub Actions"
+      ]
+    },
+    {
+      "company": "LATMOS — Laboratoire Atmosphères, Observations Spatiales",
+      "position": "Stage | Generative AI Engineer",
+      "period": "janv. – mars 2026",
+      "achievements": [
+        "Implémentation d’un DDPM à architecture U-Net (blocs ResNet, attention, embeddings temporels) sur MNIST et CIFAR-10.",
+        "Évaluation de Classifier Guidance (classifieur conditionné au bruit) et Classifier-Free Guidance (class dropout) ; analyse du compromis fidélité/diversité."
+      ],
+      "technologies": [
+        "Python",
+        "PyTorch",
+        "NumPy",
+        "CUDA",
+        "Slurm"
+      ]
+    },
+    {
+      "company": "Laboratoire de Commande des Processus",
+      "position": "Stage | ML Engineer (Fault Detection)",
+      "period": "févr. – juil. 2025",
+      "achievements": [
+        "Modélisation dynamique et détection par Deep Learning des dysfonctionnements de systèmes de vol.",
+        "Optimisation par Particle Swarm Optimization (PSO) et validation sur un système réel : Twin Rotor MIMO System (TRMS)."
+      ],
+      "technologies": [
+        "MATLAB",
+        "Simulink",
+        "Python",
+        "PyTorch"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Test technique Sephora — Classification de produits cosmétiques par NLP",
+      "status": "Completed",
+      "description": [
+        "Développement d’un package Python de classification (nom et description) combinant baseline par mots-clés et TF-IDF + LinearSVC.",
+        "F1 macro de 92,23% (catégorie) et 95,15% (cible) sur validation stratifiée.",
+        "Code réutilisable compatible scikit-learn, tests unitaires, contrôles qualité automatisés et documentation du package."
+      ],
+      "technologies": [
+        "Python",
+        "scikit-learn",
+        "TF-IDF",
+        "LinearSVC",
+        "pytest",
+        "Ruff",
+        "pre-commit",
+        "Sphinx",
+        "GitHub Actions",
+        "uv"
+      ]
+    },
+    {
+      "name": "ApplyFlow — Agent IA de candidature automatisée",
+      "status": "En cours",
+      "description": [
+        "Prototype en développement : agent IA qui inspecte des formulaires web et renseigne les champs depuis un profil candidat structuré et validé avec Pydantic.",
+        "Orchestration LangGraph du cycle lecture de page, décision du LLM et exécution des actions ; automatisation Playwright dans une session Chrome existante, avec reprise manuelle et traces détaillées dans le terminal.",
+        "Agent rédacteur distinct : génère une lettre à partir de l’offre et du parcours candidat ; l’agent principal la saisit.",
+        "Tests sur formulaires réels, parcours complet à fiabiliser."
+      ],
+      "technologies": [
+        "Python",
+        "Pydantic",
+        "LangGraph",
+        "LangChain",
+        "Ollama",
+        "Qwen",
+        "Playwright",
+        "Git",
+        "uv"
+      ]
+    }
+  ],
+  "technical_skills": {
+    "ML & Deep Learning": [
+      "scikit-learn",
+      "SVM",
+      "Random Forest",
+      "LightGBM",
+      "XGBoost",
+      "modèles supervisés",
+      "clustering",
+      "K-Means",
+      "DBSCAN",
+      "PyTorch",
+      "TensorFlow/Keras",
+      "CNN/U-Net",
+      "RNN/GRU/LSTM",
+      "Transformers",
+      "diffusion",
+      "GAN",
+      "VAE",
+      "attention"
+    ],
+    "IA générative & Agents": [
+      "RAG",
+      "LangGraph",
+      "LangChain",
+      "Ollama",
+      "Qwen",
+      "orchestration d’agents"
+    ],
+    "Data & Bases de données": [
+      "PySpark",
+      "pandas",
+      "NumPy",
+      "SQL",
+      "PostgreSQL",
+      "Azure Databricks"
+    ],
+    "Génie logiciel & MLOps": [
+      "Python",
+      "Git",
+      "GitHub Actions",
+      "intégration continue",
+      "Docker",
+      "FastAPI",
+      "MLflow",
+      "Pydantic",
+      "Playwright",
+      "pytest",
+      "Ruff",
+      "pre-commit",
+      "Sphinx",
+      "uv"
+    ],
+    "Autres langages": [
+      "C/C++",
+      "MATLAB"
+    ]
+  },
+  "soft_skills": [
+    "résolution de problèmes",
+    "Agile/Scrum",
+    "vulgarisation technique"
+  ],
+  "languages": {
+    "Français": "bilingue",
+    "Anglais": "courant",
+    "Arabe": "langue maternelle"
+  }
+}

@@ -9,9 +9,14 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "dotenv>=0.9.9",
+    "email-validator>=2.4.0",
     "fastapi>=0.163.2",
+    "langchain-anthropic>=1.7.11",
     "langchain-core>=1.8.1",
     "langchain-google-genai>=4.5.0",
+    "langchain-groq>=1.2.1",
+    "langchain-ollama>=1.1.0",
+    "langchain-openai>=1.8.1",
     "langgraph>=1.2.22",
     "langgraph-checkpoint-postgres>=3.2.1",
     "pydantic>=2.14.3",

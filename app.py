@@ -21,24 +21,40 @@ import browser_bridge
 from contextlib import asynccontextmanager
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
+from langchain_openai import ChatOpenAI
+
 from applyflow.tool.inspect_page import inspect_page_tool
+from applyflow.tool.fill_form import fill_form_tool
 from langgraph.prebuilt import ToolNode, tools_condition
+from applyflow.profile.candidate import load_candidate_profile
+
+from applyflow.tool.click_element import click_element_tool
+from applyflow.tool.select_option import select_option_tool
+from applyflow.tool.fill_date import fill_date_tool
+from applyflow.tool.verify_form import verify_form_tool
+
+from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
+
+
+candidate = load_candidate_profile()
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
+OPEN_ROUTER_API_KEY = os.getenv("OPEN_ROUTER_API_KEY")
 if "GOOGLE_API_KEY" not in os.environ:
     os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google AI API key: ")
 
 
 
 
-llm  = ChatGoogleGenerativeAI(
-    model="gemini-3.1-flash-lite",
-    google_api_key = GOOGLE_API_KEY
-
+llm = ChatGroq(
+    model="openai/gpt-oss-120b",
+    api_key=os.environ["GROQ_API_KEY"],
+    temperature=0,
+    max_retries=2,
 )
-tools = [inspect_page_tool]
+tools = [inspect_page_tool,fill_form_tool,click_element_tool,select_option_tool,fill_date_tool,verify_form_tool]
 
 llm_with_tools = llm.bind_tools(tools)
 
@@ -54,9 +70,24 @@ class ChatState(TypedDict):
 
 
 async def chat_node(state: ChatState):
-    response = await llm_with_tools.ainvoke(state["messages"])
+    response = await llm_with_tools.ainvoke(
+                            [
+                                SystemMessage(content=f"""
+                    You are ApplyFlow, an AI assistant specialized in job applications.
 
-    print("Tool calls:", response.tool_calls)
+                    You can inspect web pages and fill application forms.
+
+                    Candidate profile:
+                    {candidate.model_dump_json(indent=2)}
+
+                    Use the candidate profile when filling job application forms.
+                    Only use information available in the profile or provided by the user.
+                    Never invent missing information.
+                    Never submit an application automatically.
+                    """),
+                                *state["messages"],
+                            ]
+                                        )
 
     return {"messages": [response]}
 
@@ -134,8 +165,13 @@ async def generate_response(message: str, thread_id: str):
     async for chunk, metadata in app.state.workflow.astream(
         {
             "messages": [
-                HumanMessage(content=message)
-            ]
+                        SystemMessage(content="""
+                            You are ApplyFlow, an AI assistant that helps users automate job applications.
+                            You can inspect web pages and fill application forms using browser tools.
+                            Never invent personal information or submit applications without confirmation.
+                        """),
+                        HumanMessage(content=message)
+                        ]
         },
         config=config,
         stream_mode="messages",
